@@ -1,0 +1,60 @@
+workspace:
+    base: /go
+    path: src/github.com/yyklll/skeleton
+    when:
+        branch:
+        - master
+  kind: pipeline
+  name: API_deploy
+  
+  steps: 
+    - name: unit-test
+      image: 1.13.8-alpine3.11
+      commands:
+       - make build
+       - make test
+      when:
+        branch:
+        - master
+        event:
+        - push
+
+    - name: build-container
+      image: 1.13.8-alpine3.11
+      commands:
+       - e2e/build.sh
+      when:
+        branch:
+        - master
+        event:
+        - push
+  
+    - name: setup-infra
+      image: 1.13.8-alpine3.11
+      commands:
+       - e2e/bootstrap.sh
+      when:
+        branch:
+        - master
+        event:
+        - push
+
+    - name: install-container
+      image: 1.13.8-alpine3.11
+      commands:
+       - e2e/install.sh
+      when:
+        branch:
+        - master
+        event:
+        - push
+
+     - name: run-e2e-test
+       image: 1.13.8-alpine3.11
+       commands:
+        - e2e/test.sh
+       when:
+         branch:
+         - master
+         event:
+         - push

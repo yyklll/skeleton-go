@@ -23,6 +23,7 @@ build-charts:
 
 build-container:
 	docker build -t $(DOCKER_IMAGE_NAME):$(VERSION) .
+	docker tag -t $(DOCKER_IMAGE_NAME):$(VERSION) $(DOCKER_IMAGE_NAME):latest
 
 test-container:
 	@docker rm -f $(DOCKER_IMAGE_NAME) || true

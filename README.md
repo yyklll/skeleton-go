@@ -13,3 +13,4 @@ features:
 * Instrumented with Prometheus
 * Tracing with OpenTracing and Jaeger
 * ORM and Database Migration powered by XORM
+* End-to-End testing powered by Drone and Kubernetes Kind
