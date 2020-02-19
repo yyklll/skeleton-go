@@ -1,0 +1,19 @@
+apiVersion: v1
+kind: Pod
+metadata:
+  name: {{ template "skeleton.fullname" . }}-grpc-test-{{ randAlphaNum 5 | lower }}
+  labels:
+    heritage: {{ .Release.Service }}
+    release: {{ .Release.Name }}
+    chart: {{ .Chart.Name }}-{{ .Chart.Version }}
+    app: {{ template "skeleton.name" . }}
+  annotations:
+    "helm.sh/hook": test-success
+    sidecar.istio.io/inject: "false"
+spec:
+  containers:
+    - name: grpc-health-probe
+      image: yyklll/grpc_health_probe:v0.3.0
+      command: ['grpc_health_probe']
+      args:  ['-addr={{ template "skeleton.fullname" . }}.{{ .Release.Namespace }}:{{ .Values.service.grpcPort }}']
+  restartPolicy: Never

@@ -1,0 +1,12 @@
+apiVersion: v1
+version: 0.1
+appVersion: 0.1
+name: skeleton
+engine: gotpl
+description: Skeleton is a microservice develepment 'Skeleton' written in Golang. Feel free to modify it by adding your own business logic.
+home: https://github.com/yyklll/skeleton
+maintainers:
+- email: naijima.cn@gmail.com
+  name: yyklll
+sources:
+- https://github.com/yyklll/skeleton
