@@ -54,11 +54,12 @@ func NewServer(config *config.AllConfig) *Server {
 func (s *Server) registerHandlers() {
 	s.router.Handle("/metrics", promhttp.Handler())
 	s.router.PathPrefix("/debug/pprof/").Handler(http.DefaultServeMux)
+	s.router.HandleFunc("/info", s.infoHandler).Methods("GET")
 	s.router.HandleFunc("/version", s.versionHandler).Methods("GET")
 	s.router.HandleFunc("/healthz", s.healthzHandler).Methods("GET")
 	s.router.HandleFunc("/readyz", s.readyzHandler).Methods("GET")
-	// s.router.HandleFunc("/readyz/enable", s.enableReadyHandler).Methods("POST")
-	// s.router.HandleFunc("/readyz/disable", s.disableReadyHandler).Methods("POST")
+	s.router.HandleFunc("/readyz/enable", s.enableReadyHandler).Methods("POST")
+	s.router.HandleFunc("/readyz/disable", s.disableReadyHandler).Methods("POST")
 	s.router.HandleFunc("/token", s.tokenGenerateHandler).Methods("POST")
 	s.router.HandleFunc("/token/validate", s.tokenValidateHandler).Methods("GET")
 }
