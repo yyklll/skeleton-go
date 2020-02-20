@@ -31,7 +31,7 @@ func (s *Server) tokenGenerateHandler(w http.ResponseWriter, r *http.Request) {
 	body, err := ioutil.ReadAll(r.Body)
 	if err != nil {
 		log.Error("reading token request body failed", err)
-		s.ErrorResponseWithCode(w, r, "invalid request body", http.StatusBadRequest)
+		ErrorResponseWithCode(w, r, "invalid request body", http.StatusBadRequest)
 		return
 	}
 
@@ -51,7 +51,7 @@ func (s *Server) tokenGenerateHandler(w http.ResponseWriter, r *http.Request) {
 	token := jwt.NewWithClaims(jwt.SigningMethodHS256, claims)
 	t, err := token.SignedString([]byte(s.config.SrvConfig.JWTSecret))
 	if err != nil {
-		s.ErrorResponseWithCode(w, r, err.Error(), http.StatusBadRequest)
+		ErrorResponseWithCode(w, r, err.Error(), http.StatusBadRequest)
 		return
 	}
 
@@ -60,7 +60,7 @@ func (s *Server) tokenGenerateHandler(w http.ResponseWriter, r *http.Request) {
 		ExpiresAt: time.Unix(claims.StandardClaims.ExpiresAt, 0),
 	}
 
-	s.JSONResponse(w, r, result)
+	JSONResponse(w, r, result)
 }
 
 // TokenValidate godoc
@@ -77,12 +77,12 @@ func (s *Server) tokenGenerateHandler(w http.ResponseWriter, r *http.Request) {
 func (s *Server) tokenValidateHandler(w http.ResponseWriter, r *http.Request) {
 	authorizationHeader := r.Header.Get("authorization")
 	if authorizationHeader == "" {
-		s.ErrorResponseWithCode(w, r, "authorization bearer header required", http.StatusUnauthorized)
+		ErrorResponseWithCode(w, r, "authorization bearer header required", http.StatusUnauthorized)
 		return
 	}
 	bearerToken := strings.Split(authorizationHeader, " ")
 	if len(bearerToken) != 2 || strings.ToLower(bearerToken[0]) != "bearer" {
-		s.ErrorResponseWithCode(w, r, "authorization bearer header required", http.StatusUnauthorized)
+		ErrorResponseWithCode(w, r, "authorization bearer header required", http.StatusUnauthorized)
 		return
 	}
 
@@ -94,22 +94,22 @@ func (s *Server) tokenValidateHandler(w http.ResponseWriter, r *http.Request) {
 		return []byte(s.config.SrvConfig.JWTSecret), nil
 	})
 	if err != nil {
-		s.ErrorResponseWithCode(w, r, err.Error(), http.StatusUnauthorized)
+		ErrorResponseWithCode(w, r, err.Error(), http.StatusUnauthorized)
 		return
 	}
 
 	if token.Valid {
 		if claims.StandardClaims.Issuer != "skeleton" {
-			s.ErrorResponseWithCode(w, r, "invalid issuer", http.StatusUnauthorized)
+			ErrorResponseWithCode(w, r, "invalid issuer", http.StatusUnauthorized)
 		} else {
 			var result = TokenValidationResponse{
 				TokenName: claims.Name,
 				ExpiresAt: time.Unix(claims.StandardClaims.ExpiresAt, 0),
 			}
-			s.JSONResponse(w, r, result)
+			JSONResponse(w, r, result)
 		}
 	} else {
-		s.ErrorResponseWithCode(w, r, "Invalid authorization token", http.StatusUnauthorized)
+		ErrorResponseWithCode(w, r, "Invalid authorization token", http.StatusUnauthorized)
 	}
 }
 
