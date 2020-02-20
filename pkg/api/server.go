@@ -20,6 +20,7 @@ import (
 	"github.com/spf13/viper"
 
 	_ "github.com/yyklll/skeleton/docs"
+	"github.com/yyklll/skeleton/pkg/auth"
 	"github.com/yyklll/skeleton/pkg/config"
 	"github.com/yyklll/skeleton/pkg/log"
 	"github.com/yyklll/skeleton/pkg/watcher"
@@ -51,7 +52,7 @@ func NewServer(config *config.AllConfig) *Server {
 	}
 }
 
-func (s *Server) registerHandlers() {
+func (s *Server) registerHandlers(a auth.AuthenticationDriver) {
 	s.router.Handle("/metrics", promhttp.Handler())
 	s.router.PathPrefix("/debug/pprof/").Handler(http.DefaultServeMux)
 	s.router.HandleFunc("/info", s.infoHandler).Methods("GET")
@@ -60,21 +61,22 @@ func (s *Server) registerHandlers() {
 	s.router.HandleFunc("/readyz", s.readyzHandler).Methods("GET")
 	s.router.HandleFunc("/readyz/enable", s.enableReadyHandler).Methods("POST")
 	s.router.HandleFunc("/readyz/disable", s.disableReadyHandler).Methods("POST")
-	s.router.HandleFunc("/token", s.tokenGenerateHandler).Methods("POST")
-	s.router.HandleFunc("/token/validate", s.tokenValidateHandler).Methods("GET")
+	s.router.HandleFunc("/token", a.TokenGenerateHandler).Methods("POST")
 }
 
-func (s *Server) registerMiddlewares() {
+func (s *Server) registerMiddlewares(a auth.AuthenticationDriver) {
 	prom := NewPrometheusMiddleware()
 	s.router.Use(prom.Handler)
 	s.router.Use(s.reqLoggingMiddleware)
+	s.router.Use(a.TokenValidateMiddleware)
 }
 
 func (s *Server) ListenAndServe(stopCh <-chan struct{}) {
 	go s.startMetricsServer()
 
-	s.registerHandlers()
-	s.registerMiddlewares()
+	authDriver, _ := auth.Create("jwt", map[string]interface{}{"secret": s.config.SrvConfig.JWTSecret})
+	s.registerHandlers(authDriver)
+	s.registerMiddlewares(authDriver)
 
 	var handler http.Handler
 	if s.config.SrvConfig.H2C {
